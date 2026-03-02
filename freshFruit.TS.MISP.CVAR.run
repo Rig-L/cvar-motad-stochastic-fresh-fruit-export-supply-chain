@@ -1,0 +1,32 @@
+reset; 
+model freshFruit.TS.MISP.CVAR.MOD;
+data data1.DAT;
+
+option solver gurobi;
+option gurobi_options 'NodefileStart=0.5';
+option omit_zero_rows 1;
+option gurobi_options 'mipgap=0.01';
+solve;
+
+display _total_solve_time;
+display _nvars, _ncons;
+
+for {w in W} {
+    printf "%s\n", "SCENARIO" & w & " " & (
+        -sum{t in T, d in D, cl in C} (pc * PP[t,d,cl])
+        - sum{t in T, z in Z} (tcz[z] * NT[z,t])
+        - (sp * PW)
+        - sum{t in T} (st * TW[t])
+        - sum{t in T, d in D, cl in C} (IUP[t,d,cl] + ITP[t,d,cl]) * ic
+        - sum{t in T, d in D, s in S, cl in C} (IPP[t,d,s,cl]) * ic
+        - sum{p in P, cl in C} (cman * CT[p,cl])
+        - sum{z in Z} ((c[z]) * Q[z])+
+	sum{p in P, cl in C, d in D}(SHIPU[p,d,cl,w])*ps[cl,w]+
+	sum{p in P, cl in C, d in D, s in S}(SHIPP[p,d,s,cl,w])*ps[cl,w]+
+	sum{p in P, cl in C, d in D}(SMINU[p,d,cl,w]*pm[cl,w]*(qsu[tl,d]-rq[p,w]*days[cl]*qu)/qc[cl])+
+	sum{p in P, cl in C, d in D, s in S}(SMINP[p,d,s,cl,w]*pm[cl,w]*(qsp[tl,d,s]-rq[p,w]*days[cl]*qu)/qc[cl])
+    );
+}
+
+display G,V;
+
